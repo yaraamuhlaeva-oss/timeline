@@ -1,5 +1,5 @@
 // Change VERSION every time you upload new files, so devices get the update.
-const VERSION = "mt-v1";
+const VERSION = "mt-v3";
 const APP_FILES = [
   "./", "./index.html", "./config.js", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/favicon-64.png", "./icons/apple-touch-icon.png"

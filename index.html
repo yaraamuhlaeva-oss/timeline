@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>My timeline</title>
+<title>eswil timeline</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Timeline">
+<meta name="apple-mobile-web-app-title" content="eswil timeline">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#EEF0F6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#141728" media="(prefers-color-scheme: dark)">
@@ -77,12 +77,22 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 .cols .mon{border-left-color:var(--line)}
 .todayline{position:absolute;top:0;bottom:0;width:2px;background:var(--today);z-index:1;pointer-events:none;transform:translateX(-1px)}
 
-.row{display:flex;position:relative;height:52px}
-.row.head{position:sticky;top:0;z-index:4;height:46px;background:var(--surface);border-bottom:1px solid var(--line)}
+.row{display:flex;position:relative;min-height:64px}
+.row.head{position:sticky;top:0;z-index:4;min-height:0;height:46px;background:var(--surface);border-bottom:1px solid var(--line)}
 .label{position:sticky;left:0;z-index:3;flex:none;background:var(--surface);border:0;border-right:1px solid var(--line);
   padding:7px 10px 7px 12px;display:flex;flex-direction:column;justify-content:center;min-width:0;cursor:pointer;text-align:left}
 .row.head .label{cursor:default;z-index:5;font-size:12px;color:var(--muted)}
+.label{width:var(--lw)}
 .label .name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.gantt.full .label .name{white-space:normal;overflow-wrap:anywhere;text-overflow:clip}
+.label .due{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-bottom:1px}
+.label .due.late{color:var(--today)}
+.row.done .due{color:var(--muted)}
+.colhead{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%}
+.colbtn{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:3px 8px;font-size:12px;font-weight:500;color:var(--ink);cursor:pointer;white-space:nowrap}
+.resizer{position:absolute;top:0;bottom:0;right:-7px;width:14px;cursor:col-resize;touch-action:none;z-index:6;display:flex;justify-content:center}
+.resizer::after{content:"";width:3px;height:22px;margin-top:12px;border-radius:2px;background:var(--line)}
+.resizer:hover::after,.resizer.drag::after{background:var(--focus)}
 .label .meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden}
 .label .meta.late{color:var(--today);font-weight:500}
 .row.done .name{text-decoration:line-through;color:var(--muted)}
@@ -93,7 +103,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 .hday.is-today{color:var(--today);font-weight:700}
 .hmonth{position:absolute;top:5px;font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;padding-left:4px}
 
-.bar{position:absolute;top:13px;height:26px;border-radius:7px;border:0;padding:0 8px;cursor:pointer;z-index:2;
+.bar{position:absolute;top:50%;transform:translateY(-50%);height:26px;border-radius:7px;border:0;padding:0 8px;cursor:pointer;z-index:2;
   display:flex;align-items:center;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;background:var(--c)}
 .bar::after{content:"";position:absolute;right:0;top:0;bottom:0;width:4px;background:rgba(0,0,0,.25)}
 .row.done .bar{opacity:.35}
@@ -118,8 +128,10 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 .sheet p{margin:0 0 14px;color:var(--muted)}
 .field{margin-bottom:14px}
 .field > label,.field > .flabel{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px}
-.field input[type=text],.field input[type=date],.field input[type=email],.field input[type=password]{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:11px 12px;font-size:16px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field input[type=text],.field input[type=date],.field input[type=time],.field input[type=email],.field input[type=password]{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:11px 12px;font-size:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.two>.field{min-width:0}
+.field input{min-width:0;max-width:100%}
 .topics{display:flex;flex-wrap:wrap;gap:6px}
 .topics label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:14px;cursor:pointer}
 .topics input{position:absolute;opacity:0;pointer-events:none}
@@ -145,7 +157,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 <header>
   <div class="top">
     <div>
-      <h1>My timeline</h1>
+      <h1>eswil timeline</h1>
       <p class="summary" id="summary">No tasks yet</p>
     </div>
     <div class="controls">
@@ -179,6 +191,9 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
   <div class="two">
     <div class="field"><label for="fStart">Start</label><input type="date" id="fStart"></div>
     <div class="field"><label for="fDue">Deadline</label><input type="date" id="fDue"></div>
+  </div>
+  <div class="two">
+    <div class="field"><label for="fTime">Deadline time (optional)</label><input type="time" id="fTime"></div>
   </div>
   <p class="err" id="err" role="alert"></p>
   <div class="actions">
@@ -244,9 +259,11 @@ if(configured&&window.supabase&&window.supabase.createClient){
   sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 }
 
-const toRow=t=>({id:t.id,user_id:session.user.id,name:t.name,topic:t.topic,start_date:t.start,deadline:t.deadline,
-  done:!!t.done,deleted:!!t.deleted,created_at:t.createdAt||t.updatedAt,updated_at:t.updatedAt});
-const fromRow=r=>({id:r.id,name:r.name,topic:r.topic,start:r.start_date,deadline:r.deadline,done:!!r.done,
+let noTimeCol=false; // true if the database has no deadline_time column yet
+const toRow=t=>{const r={id:t.id,user_id:session.user.id,name:t.name,topic:t.topic,start_date:t.start,deadline:t.deadline,
+  done:!!t.done,deleted:!!t.deleted,created_at:t.createdAt||t.updatedAt,updated_at:t.updatedAt};
+  if(!noTimeCol)r.deadline_time=t.deadlineTime||null; return r};
+const fromRow=r=>({id:r.id,name:r.name,topic:r.topic,start:r.start_date,deadline:r.deadline,deadlineTime:r.deadline_time||"",done:!!r.done,
   deleted:!!r.deleted,createdAt:Number(r.created_at),updatedAt:Number(r.updated_at),dirty:false});
 
 function setSync(state,err){syncState=state;syncError=err||"";paintSync()}
@@ -276,6 +293,7 @@ async function sync(){
     const byId=new Map(tasks.map(t=>[t.id,t]));
     for(const r of data){
       const remote=fromRow(r), local=byId.get(r.id);
+      if(!("deadline_time" in r)&&local&&local.deadlineTime)remote.deadlineTime=local.deadlineTime;
       if(!local||remote.updatedAt>local.updatedAt)byId.set(r.id,remote);
       else if(remote.updatedAt===local.updatedAt)local.dirty=false;
     }
@@ -291,6 +309,7 @@ async function sync(){
     try{localStorage.setItem(KEY_LAST,String(Date.now()))}catch(e){}
     setSync("ok");
   }catch(e){
+    if(e&&/deadline_time/.test(e.message||"")&&!noTimeCol){noTimeCol=true;again=true;setSync("busy");return}
     setSync(navigator.onLine?"error":"off",navigator.onLine?(e&&e.message?e.message:"Unknown error"):"");
   }finally{
     syncing=false;
@@ -344,7 +363,7 @@ function renderAccount(){
   }else{
     const pending=tasks.filter(t=>t.dirty).length;
     const status={ok:"Everything is synced.",busy:"Syncing now…",off:"You are offline. Changes are saved on this device and will sync later.",error:"Sync failed: "+esc(syncError)}[syncState]||"";
-    body.innerHTML=`<p>Signed in as <b>${esc(session.user.email||"")}</b>.<br>${status}<br>Last sync: ${esc(lastText)}.${pending?` Not synced yet: ${pending}.`:""}</p>
+    body.innerHTML=`<p>Signed in as <b>${esc(session.user.email||"")}</b>.<br>${status}<br>Last sync: ${esc(lastText)}.${pending?` Not synced yet: ${pending}.`:""}${noTimeCol?"<br><b>Deadline times stay on this device only.</b> To sync them, run update-v3.sql in Supabase (SQL Editor).":""}</p>
       <div class="actions"><button class="primary" type="button" id="syncNow">Sync now</button>${installBtn}<button class="secondary" type="button" id="signOut">Sign out</button><button class="secondary" type="button" data-close>Close</button></div>`;
     $("syncNow").addEventListener("click",()=>sync());
     $("signOut").addEventListener("click",async()=>{await sb.auth.signOut();session=null;setSync("signin");closeSheets();toast("Signed out. Tasks stay on this device.")});
@@ -379,6 +398,7 @@ function openTask(id){
   const r=document.querySelector(`#topics input[value="${topic}"]`); if(r)r.checked=true;
   $("fStart").value=t?t.start:todayStr();
   $("fDue").value=t?t.deadline:"";
+  $("fTime").value=t&&t.deadlineTime?t.deadlineTime:"";
   $("doneBtn").hidden=!t; $("delBtn").hidden=!t;
   if(t)$("doneBtn").textContent=t.done?"Mark not done":"Mark done";
   $("delBtn").textContent="Delete"; $("delBtn").classList.remove("armed");
@@ -392,11 +412,12 @@ $("taskSheet").addEventListener("submit",ev=>{
   const topic=(document.querySelector("#topics input:checked")||{}).value||"personal";
   const start=$("fStart").value||todayStr();
   const deadline=$("fDue").value;
+  const deadlineTime=$("fTime").value||"";
   if(!name){$("err").textContent="Write what the task is.";$("fName").focus();return}
   if(!deadline){$("err").textContent="Choose a deadline.";$("fDue").focus();return}
   if(toNum(deadline)<toNum(start)){$("err").textContent="The deadline can't be before the start.";$("fDue").focus();return}
   const old=editingId?tasks.find(x=>x.id===editingId):null;
-  commit({id:old?old.id:newId(),name,topic,start,deadline,done:old?!!old.done:false,deleted:false,createdAt:old?old.createdAt:Date.now()});
+  commit({id:old?old.id:newId(),name,topic,start,deadline,deadlineTime,done:old?!!old.done:false,deleted:false,createdAt:old?old.createdAt:Date.now()});
   closeSheets(); toast(old?"Changes saved":"Task added");
 });
 $("doneBtn").addEventListener("click",()=>{
@@ -411,13 +432,19 @@ $("delBtn").addEventListener("click",()=>{
 $("fab").addEventListener("click",()=>openTask(null));
 
 /* ---------- render ---------- */
+const nowHM=()=>{const d=new Date();return `${pad(d.getHours())}:${pad(d.getMinutes())}`};
+function isLate(t,tn){
+  if(t.done)return false;
+  const dn=toNum(t.deadline);
+  return dn<tn||(dn===tn&&!!t.deadlineTime&&nowHM()>t.deadlineTime);
+}
 function statusOf(t,tn){
+  const tm=t.deadlineTime?`, ${t.deadlineTime}`:"";
   if(t.done)return{text:"Done",late:false};
   const dn=toNum(t.deadline);
-  if(dn<tn){const k=tn-dn;return{text:`Overdue by ${k} day${k>1?"s":""}`,late:true}}
-  if(dn===tn)return{text:"Due today",late:false};
-  if(dn===tn+1)return{text:"Due tomorrow",late:false};
-  return{text:`Due ${fmt(dn)}`,late:false};
+  if(dn===tn)return{text:`Due today${tm}`,late:false};
+  if(dn===tn+1)return{text:`Due tomorrow${tm}`,late:false};
+  return{text:`Due ${fmt(dn)}${tm}`,late:false};
 }
 function renderChips(list){
   const used=new Set(list.map(t=>t.topic));
@@ -429,9 +456,9 @@ function render(){
   const tn=toNum(todayStr());
   const all=visible();
   const active=all.filter(t=>!t.done);
-  const late=active.filter(t=>toNum(t.deadline)<tn).length;
+
   const doneN=all.length-active.length;
-  $("summary").innerHTML=all.length?`${active.length} active${late?`, <b>${late} overdue</b>`:""}${doneN?`, ${doneN} done`:""}`:"No tasks yet";
+  $("summary").innerHTML=all.length?`${active.length} active${doneN?`, ${doneN} done`:""}`:"No tasks yet";
   renderChips(all);
   const g=$("gantt");
   if(!all.length){
@@ -439,9 +466,9 @@ function render(){
     g._meta=null; return;
   }
   const shown=all.filter(t=>filter==="all"||t.topic===filter)
-    .sort((a,b)=>(a.done-b.done)||(toNum(a.deadline)-toNum(b.deadline))||(toNum(a.start)-toNum(b.start)));
+    .sort((a,b)=>(a.done-b.done)||(toNum(a.deadline)-toNum(b.deadline))||((a.deadlineTime||"99")<(b.deadlineTime||"99")?-1:(a.deadlineTime||"99")>(b.deadlineTime||"99")?1:0)||(toNum(a.start)-toNum(b.start)));
   const dayW=zoom==="near"?40:16;
-  const labelW=window.innerWidth<600?138:230;
+  const labelW=colWidth();
   let s=tn-3,e=tn+24;
   for(const t of all){s=Math.min(s,toNum(t.start));e=Math.max(e,toNum(t.deadline)+3)}
   s-=(fromNum(s).getUTCDay()+6)%7;
@@ -458,24 +485,26 @@ function render(){
     const st=statusOf(t,tn),a=toNum(t.start),b=toNum(t.deadline);
     const left=(a-s)*dayW,w=Math.max(1,b-a+1)*dayW;
     rows+=`<div class="row${t.done?" done":""}">
-      <button type="button" class="label" style="width:${labelW}px" data-id="${esc(t.id)}">
+      <button type="button" class="label" data-id="${esc(t.id)}">
+        <span class="due${st.late?" late":""}">${esc(st.text)}</span>
         <span class="name">${esc(t.name)}</span>
-        <span class="meta${st.late?" late":""}"><span class="dot" style="background:${color(t.topic)}"></span>${esc(topicById[t.topic]?topicById[t.topic].name:"Other")}, ${esc(st.text.charAt(0).toLowerCase()+st.text.slice(1))}</span>
+        <span class="meta"><span class="dot" style="background:${color(t.topic)}"></span>${esc(topicById[t.topic]?topicById[t.topic].name:"Other")}</span>
       </button>
       <div class="track" style="width:${trackW}px">
-        <button type="button" class="bar${st.late?" late":""}" data-id="${esc(t.id)}" style="--c:${color(t.topic)};left:${left}px;width:${w-2}px" title="${esc(t.name)}: ${fmt(a)} to ${fmt(b)}" aria-label="${esc(t.name)}, ${fmt(a)} to ${fmt(b)}">${w>=70?esc(st.text):""}</button>
+        <button type="button" class="bar${st.late?" late":""}" data-id="${esc(t.id)}" style="--c:${color(t.topic)};left:${left}px;width:${w-2}px" title="${esc(t.name)}: ${fmt(a)} to ${fmt(b)}${t.deadlineTime?", "+t.deadlineTime:""}" aria-label="${esc(t.name)}, ${fmt(a)} to ${fmt(b)}">${w>=70?esc(st.text):""}</button>
       </div></div>`;
   }
   if(!shown.length)rows=`<div class="empty">No tasks with this topic.</div>`;
-  const pl=g.scrollLeft,pt=g.scrollTop;
-  g.innerHTML=`<div class="grid" style="width:${labelW+trackW}px">
-    <div class="cols" style="left:${labelW}px">${cols}</div>
-    <div class="todayline" style="left:${labelW+(tn-s)*dayW+dayW/2}px"></div>
-    <div class="row head"><div class="label" style="width:${labelW}px">${zoom==="near"?"Days":"Weeks"}</div>
+  const oldM=g._meta, leftDay=oldM?oldM.s+g.scrollLeft/oldM.dayW:null, pt=g.scrollTop;
+  g.classList.toggle("full",fullText);
+  g.innerHTML=`<div class="grid" style="--lw:${labelW}px;width:calc(var(--lw) + ${trackW}px)">
+    <div class="cols" style="left:var(--lw)">${cols}</div>
+    <div class="todayline" style="left:calc(var(--lw) + ${(tn-s)*dayW+dayW/2}px)"></div>
+    <div class="row head"><div class="label"><div class="colhead"><span>Tasks</span><button type="button" class="colbtn" id="colBtn" aria-pressed="${fullText}">${fullText?"Narrow":"Full text"}</button></div><div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Drag to change the width of the task column"></div></div>
       <div class="track" style="width:${trackW}px">${hmonths}${hdays}</div></div>
-    ${rows}<div class="row filler" aria-hidden="true"><div class="label" style="width:${labelW}px"></div></div></div>`;
+    ${rows}<div class="row filler" aria-hidden="true"><div class="label"></div></div></div>`;
   g._meta={s,dayW,tn};
-  if(!scrolledOnce){scrollToToday(false);scrolledOnce=true}else{g.scrollLeft=pl;g.scrollTop=pt}
+  if(!scrolledOnce||leftDay===null){scrollToToday(false);scrolledOnce=true}else{g.scrollLeft=Math.max(0,(leftDay-s)*dayW);g.scrollTop=pt}
 }
 function scrollToToday(smooth){
   const g=$("gantt"),m=g._meta;if(!m)return;
@@ -491,7 +520,33 @@ document.querySelectorAll("[data-zoom]").forEach(b=>b.addEventListener("click",(
 }));
 $("todayBtn").addEventListener("click",()=>scrollToToday(true));
 let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(render,150)});
-let lastDay=todayStr();setInterval(()=>{if(todayStr()!==lastDay){lastDay=todayStr();render()}},60000);
+setInterval(()=>{if(!document.querySelector(".sheet.open"))render()},60000); // updates "overdue" when a deadline time passes
+
+/* ---------- task column: full text + drag to resize ---------- */
+const KEY_COL="mt-col-v1";
+let colSaved={};try{colSaved=JSON.parse(localStorage.getItem(KEY_COL)||"{}")}catch(e){}
+let fullText=!!colSaved.full;
+const defaultW=()=>window.innerWidth<600?150:240;
+const maxW=()=>Math.max(160,window.innerWidth-70);
+function colWidth(){
+  const w=fullText?(colSaved.wFull||Math.min(maxW(),window.innerWidth<600?Math.round(window.innerWidth*.7):420)):(colSaved.w||defaultW());
+  return Math.max(110,Math.min(maxW(),w));
+}
+function saveCol(){try{localStorage.setItem(KEY_COL,JSON.stringify(colSaved))}catch(e){}}
+$("gantt").addEventListener("click",e=>{
+  if(e.target.closest("#colBtn")){e.stopPropagation();fullText=!fullText;colSaved.full=fullText;saveCol();render()}
+},true);
+$("gantt").addEventListener("pointerdown",e=>{
+  const r=e.target.closest("#resizer");if(!r)return;
+  e.preventDefault();
+  const grid=$("gantt").querySelector(".grid");const startX=e.clientX,startW=colWidth();
+  r.classList.add("drag");r.setPointerCapture(e.pointerId);
+  let w=startW;
+  const move=ev=>{w=Math.max(110,Math.min(maxW(),startW+ev.clientX-startX));grid.style.setProperty("--lw",w+"px")};
+  const up=()=>{r.classList.remove("drag");r.removeEventListener("pointermove",move);r.removeEventListener("pointerup",up);r.removeEventListener("pointercancel",up);
+    if(fullText)colSaved.wFull=w;else colSaved.w=w;saveCol();render()};
+  r.addEventListener("pointermove",move);r.addEventListener("pointerup",up);r.addEventListener("pointercancel",up);
+});
 
 /* ---------- start ---------- */
 render(); paintSync(); initAuth();
