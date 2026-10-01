@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My timeline</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-64.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Timeline">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EEF0F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141728" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#EEF0F6; --surface:#FFFFFF; --ink:#1C2140; --muted:#6A7090; --line:#DCE0EC;
+  --weekend:#E6E9F2; --today:#E2455B; --ok:#1F9C7E; --warn:#D98E1F; --focus:#3B6FE0; --shadow:0 10px 30px rgba(28,33,64,.18);
+  --t-study:#3B6FE0; --t-starosta:#D98E1F; --t-lab:#1F9C7E; --t-bestalks:#D94E7A;
+  --t-mentoring:#7C4DDB; --t-studsovet:#5A8A26; --t-personal:#6F7690;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141728; --surface:#1D2136; --ink:#E9EBF5; --muted:#9097B5; --line:#2D324C;
+    --weekend:#191C30; --today:#FF6B7E; --ok:#3CC39F; --warn:#F0AC45; --focus:#7FA2FF; --shadow:0 10px 30px rgba(0,0,0,.5);
+    --t-study:#6E95F2; --t-starosta:#F0AC45; --t-lab:#3CC39F; --t-bestalks:#F0739B;
+    --t-mentoring:#A385F0; --t-studsovet:#86B94C; --t-personal:#8C93AE;
+  }
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.4;
+  display:flex;flex-direction:column;overflow:hidden;-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+header{padding:18px 16px 10px;display:flex;flex-direction:column;gap:12px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.summary{margin:4px 0 0;color:var(--muted);font-size:14px}
+.summary b{color:var(--today);font-weight:600}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:2px}
+.seg button{border:0;background:none;padding:6px 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.ghost{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 11px;font-size:13px;font-weight:500;cursor:pointer}
+.sync{display:flex;align-items:center;gap:6px}
+.sync .dot{background:var(--muted)}
+.sync[data-state="ok"] .dot{background:var(--ok)}
+.sync[data-state="busy"] .dot{background:var(--focus)}
+.sync[data-state="off"] .dot,.sync[data-state="setup"] .dot,.sync[data-state="signin"] .dot{background:var(--warn)}
+.sync[data-state="error"] .dot{background:var(--today)}
+
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
+
+main{flex:1;min-height:0;display:flex;flex-direction:column}
+.gantt{flex:1;min-height:0;overflow:auto;background:var(--surface);border-top:1px solid var(--line);position:relative;overscroll-behavior:contain}
+.grid{position:relative;min-height:100%;display:flex;flex-direction:column}
+.row.filler{flex:1 0 100px;height:auto}
+.row.filler .label{cursor:default}
+.cols{position:absolute;top:0;bottom:0;display:flex;pointer-events:none;z-index:0}
+.cols div{flex:none;height:100%;border-left:1px solid transparent}
+.cols .we{background:var(--weekend)}
+.cols .mon{border-left-color:var(--line)}
+.todayline{position:absolute;top:0;bottom:0;width:2px;background:var(--today);z-index:1;pointer-events:none;transform:translateX(-1px)}
+
+.row{display:flex;position:relative;height:52px}
+.row.head{position:sticky;top:0;z-index:4;height:46px;background:var(--surface);border-bottom:1px solid var(--line)}
+.label{position:sticky;left:0;z-index:3;flex:none;background:var(--surface);border:0;border-right:1px solid var(--line);
+  padding:7px 10px 7px 12px;display:flex;flex-direction:column;justify-content:center;min-width:0;cursor:pointer;text-align:left}
+.row.head .label{cursor:default;z-index:5;font-size:12px;color:var(--muted)}
+.label .name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.label .meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden}
+.label .meta.late{color:var(--today);font-weight:500}
+.row.done .name{text-decoration:line-through;color:var(--muted)}
+.track{position:relative;flex:none}
+.row:not(.head) + .row:not(.head) .label{border-top:1px solid var(--line)}
+
+.hday{position:absolute;bottom:6px;font-size:12px;color:var(--muted);text-align:center}
+.hday.is-today{color:var(--today);font-weight:700}
+.hmonth{position:absolute;top:5px;font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;padding-left:4px}
+
+.bar{position:absolute;top:13px;height:26px;border-radius:7px;border:0;padding:0 8px;cursor:pointer;z-index:2;
+  display:flex;align-items:center;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;background:var(--c)}
+.bar::after{content:"";position:absolute;right:0;top:0;bottom:0;width:4px;background:rgba(0,0,0,.25)}
+.row.done .bar{opacity:.35}
+.bar.late{box-shadow:0 0 0 2px var(--today)}
+
+.empty{padding:48px 24px;text-align:center;color:var(--muted);max-width:340px;margin:0 auto}
+.empty strong{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
+
+.fab{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  width:64px;height:64px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font-size:34px;line-height:1;
+  box-shadow:var(--shadow);cursor:pointer;z-index:20;display:grid;place-items:center}
+.fab:active{transform:translateX(-50%) scale(.94)}
+
+.backdrop{position:fixed;inset:0;background:rgba(10,12,25,.45);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
+.backdrop.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;background:var(--surface);border-radius:20px 20px 0 0;
+  padding:10px 18px calc(18px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto;box-shadow:var(--shadow);
+  transform:translateY(105%);transition:transform .25s ease;max-height:92%;overflow:auto;visibility:hidden}
+.sheet.open{transform:none;visibility:visible}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.sheet h2{margin:0 0 14px;font-size:20px;font-weight:700}
+.sheet p{margin:0 0 14px;color:var(--muted)}
+.field{margin-bottom:14px}
+.field > label,.field > .flabel{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px}
+.field input[type=text],.field input[type=date],.field input[type=email],.field input[type=password]{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:11px 12px;font-size:16px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.topics{display:flex;flex-wrap:wrap;gap:6px}
+.topics label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:14px;cursor:pointer}
+.topics input{position:absolute;opacity:0;pointer-events:none}
+.topics input:checked + label{border-color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);font-weight:600}
+.topics input:focus-visible + label{outline:2px solid var(--focus);outline-offset:2px}
+.err{color:var(--today);font-size:13px;min-height:18px;margin:-4px 0 8px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.primary{flex:1;border:0;background:var(--ink);color:var(--bg);border-radius:12px;padding:13px;font-weight:600;cursor:pointer;font-size:15px}
+.primary:disabled{opacity:.5}
+.secondary{border:1px solid var(--line);background:none;border-radius:12px;padding:13px 14px;font-weight:500;cursor:pointer}
+.danger{border:1px solid var(--today);color:var(--today);background:none;border-radius:12px;padding:13px 14px;font-weight:500;cursor:pointer}
+.danger.armed{background:var(--today);color:#fff}
+
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:40;
+  opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.sheet,.backdrop,.toast{transition:none}}
+@media (min-width:700px){header{padding:24px 24px 12px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div>
+      <h1>My timeline</h1>
+      <p class="summary" id="summary">No tasks yet</p>
+    </div>
+    <div class="controls">
+      <button class="ghost sync" id="syncBtn" type="button" data-state="setup"><span class="dot"></span><span id="syncText">Sync</span></button>
+      <button class="ghost" id="todayBtn" type="button">Today</button>
+      <div class="seg" role="group" aria-label="Zoom">
+        <button type="button" data-zoom="near" aria-pressed="true">Days</button>
+        <button type="button" data-zoom="far" aria-pressed="false">Weeks</button>
+      </div>
+    </div>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Filter by topic"></div>
+</header>
+<main><div class="gantt" id="gantt"></div></main>
+
+<button class="fab" id="fab" type="button" aria-label="Add task">+</button>
+<div class="backdrop" id="backdrop"></div>
+
+<!-- Task sheet -->
+<form class="sheet" id="taskSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" novalidate>
+  <div class="grab"></div>
+  <h2 id="sheetTitle">New task</h2>
+  <div class="field">
+    <label for="fName">Task</label>
+    <input type="text" id="fName" maxlength="120" placeholder="e.g. Send speaker brief" autocomplete="off">
+  </div>
+  <div class="field">
+    <span class="flabel" id="topicLabel">Topic</span>
+    <div class="topics" id="topics" role="radiogroup" aria-labelledby="topicLabel"></div>
+  </div>
+  <div class="two">
+    <div class="field"><label for="fStart">Start</label><input type="date" id="fStart"></div>
+    <div class="field"><label for="fDue">Deadline</label><input type="date" id="fDue"></div>
+  </div>
+  <p class="err" id="err" role="alert"></p>
+  <div class="actions">
+    <button class="primary" type="submit" id="saveBtn">Add task</button>
+    <button class="secondary" type="button" id="doneBtn" hidden>Mark done</button>
+    <button class="danger" type="button" id="delBtn" hidden>Delete</button>
+    <button class="secondary" type="button" data-close>Cancel</button>
+  </div>
+</form>
+
+<!-- Account / sync sheet -->
+<div class="sheet" id="accSheet" role="dialog" aria-modal="true" aria-labelledby="accTitle">
+  <div class="grab"></div>
+  <h2 id="accTitle">Sync</h2>
+  <div id="accBody"></div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+"use strict";
+/* ---------- constants & helpers ---------- */
+const TOPICS=[
+  {id:"study",name:"Study"},{id:"starosta",name:"Староста"},{id:"lab",name:"Lab"},
+  {id:"bestalks",name:"BESTALKS"},{id:"mentoring",name:"Mentoring"},{id:"studsovet",name:"Студсовет"},
+  {id:"personal",name:"Personal"}
+];
+const topicById=Object.fromEntries(TOPICS.map(t=>[t.id,t]));
+const color=id=>`var(--t-${topicById[id]?id:"personal"})`;
+const KEY_TASKS="mt-tasks-v1", KEY_LAST="mt-lastsync-v1";
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const isoLocal=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const todayStr=()=>isoLocal(new Date());
+const toNum=s=>{const[y,m,d]=String(s).split("-").map(Number);return Math.round(Date.UTC(y,m-1,d)/864e5)};
+const fromNum=n=>new Date(n*864e5);
+const fmt=n=>{const d=fromNum(n);return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const newId=()=>"t"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+let tt;function toast(msg){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("show"),2400)}
+
+/* ---------- local store (works offline) ---------- */
+let tasks=[];
+try{tasks=JSON.parse(localStorage.getItem(KEY_TASKS)||"[]")}catch(e){tasks=[]}
+function persist(){try{localStorage.setItem(KEY_TASKS,JSON.stringify(tasks))}catch(e){toast("This device is out of storage space.")}}
+const visible=()=>tasks.filter(t=>!t.deleted);
+
+function commit(t){
+  t.updatedAt=Date.now(); t.dirty=true;
+  const i=tasks.findIndex(x=>x.id===t.id); if(i>=0)tasks[i]=t; else tasks.push(t);
+  persist(); render(); scheduleSync();
+}
+
+/* ---------- sync with Supabase ---------- */
+const cfg=window.APP_CONFIG||{};
+const configured=/^https:\/\//.test(cfg.SUPABASE_URL||"")&&cfg.SUPABASE_KEY&&!/PASTE_/.test(cfg.SUPABASE_KEY);
+let sb=null, session=null, syncing=false, again=false, syncState="setup", syncError="";
+if(configured&&window.supabase&&window.supabase.createClient){
+  sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+}
+
+const toRow=t=>({id:t.id,user_id:session.user.id,name:t.name,topic:t.topic,start_date:t.start,deadline:t.deadline,
+  done:!!t.done,deleted:!!t.deleted,created_at:t.createdAt||t.updatedAt,updated_at:t.updatedAt});
+const fromRow=r=>({id:r.id,name:r.name,topic:r.topic,start:r.start_date,deadline:r.deadline,done:!!r.done,
+  deleted:!!r.deleted,createdAt:Number(r.created_at),updatedAt:Number(r.updated_at),dirty:false});
+
+function setSync(state,err){syncState=state;syncError=err||"";paintSync()}
+function paintSync(){
+  const text={setup:"Sync not set up",signin:"Sign in",off:"Offline",busy:"Syncing…",ok:"Synced",error:"Sync problem"}[syncState];
+  $("syncBtn").dataset.state=syncState; $("syncText").textContent=text;
+  if($("accSheet").classList.contains("open"))renderAccount();
+}
+function baseState(){
+  if(!configured)return"setup";
+  if(!sb)return navigator.onLine?"error":"off";
+  if(!session)return"signin";
+  if(!navigator.onLine)return"off";
+  return null;
+}
+
+let syncTimer;
+function scheduleSync(){clearTimeout(syncTimer);syncTimer=setTimeout(sync,800)}
+
+async function sync(){
+  const b=baseState(); if(b){setSync(b,!sb&&configured&&navigator.onLine?"The sync library did not load. Check your internet and reload.":"");return}
+  if(syncing){again=true;return}
+  syncing=true; setSync("busy");
+  try{
+    const {data,error}=await sb.from("tasks").select("*");
+    if(error)throw error;
+    const byId=new Map(tasks.map(t=>[t.id,t]));
+    for(const r of data){
+      const remote=fromRow(r), local=byId.get(r.id);
+      if(!local||remote.updatedAt>local.updatedAt)byId.set(r.id,remote);
+      else if(remote.updatedAt===local.updatedAt)local.dirty=false;
+    }
+    tasks=[...byId.values()];
+    const toPush=tasks.filter(t=>t.dirty);
+    if(toPush.length){
+      const stamps=new Map(toPush.map(t=>[t.id,t.updatedAt]));
+      const {error:e2}=await sb.from("tasks").upsert(toPush.map(toRow));
+      if(e2)throw e2;
+      for(const t of tasks)if(t.dirty&&stamps.get(t.id)===t.updatedAt)t.dirty=false;
+    }
+    persist(); render();
+    try{localStorage.setItem(KEY_LAST,String(Date.now()))}catch(e){}
+    setSync("ok");
+  }catch(e){
+    setSync(navigator.onLine?"error":"off",navigator.onLine?(e&&e.message?e.message:"Unknown error"):"");
+  }finally{
+    syncing=false;
+    if(again){again=false;scheduleSync()}
+  }
+}
+
+async function initAuth(){
+  const b=baseState();
+  if(!sb){setSync(b||"error");return}
+  try{const {data}=await sb.auth.getSession();session=data.session}catch(e){session=null}
+  sb.auth.onAuthStateChange((_ev,s)=>{session=s;if(s)scheduleSync();else setSync(baseState()||"signin")});
+  sync();
+}
+window.addEventListener("online",()=>sync());
+window.addEventListener("offline",()=>setSync("off"));
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")sync()});
+setInterval(()=>{if(document.visibilityState==="visible")sync()},60000);
+
+/* ---------- account sheet ---------- */
+let installEvt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e});
+
+function renderAccount(){
+  const body=$("accBody");
+  const last=Number(localStorage.getItem(KEY_LAST)||0);
+  const lastText=last?new Date(last).toLocaleString([], {day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"never";
+  const installBtn=installEvt?`<button class="secondary" type="button" id="installBtn">Install app</button>`:"";
+  if(!configured){
+    body.innerHTML=`<p>Sync is not set up yet. Your tasks are saved on this device only. To sync between devices, add your Supabase keys to <b>config.js</b> (see README).</p><div class="actions">${installBtn}<button class="secondary" type="button" data-close>Close</button></div>`;
+  }else if(!sb){
+    body.innerHTML=`<p>${navigator.onLine?"The sync library did not load. Reload the app.":"You are offline. Tasks are saved on this device and will sync when you are back online."}</p><div class="actions">${installBtn}<button class="secondary" type="button" data-close>Close</button></div>`;
+  }else if(!session){
+    body.innerHTML=`<p>Sign in once on each device. After that, tasks sync on their own.</p>
+      <form id="loginForm" novalidate>
+        <div class="field"><label for="lEmail">Email</label><input type="email" id="lEmail" autocomplete="username" required></div>
+        <div class="field"><label for="lPass">Password</label><input type="password" id="lPass" autocomplete="current-password" required></div>
+        <p class="err" id="lErr" role="alert"></p>
+        <div class="actions"><button class="primary" type="submit" id="lBtn">Sign in</button>${installBtn}<button class="secondary" type="button" data-close>Close</button></div>
+      </form>`;
+    $("loginForm").addEventListener("submit",async e=>{
+      e.preventDefault();
+      const email=$("lEmail").value.trim(), password=$("lPass").value;
+      if(!email||!password){$("lErr").textContent="Enter your email and password.";return}
+      if(!navigator.onLine){$("lErr").textContent="You are offline. Connect to the internet to sign in.";return}
+      $("lBtn").disabled=true;$("lBtn").textContent="Signing in…";
+      const {error}=await sb.auth.signInWithPassword({email,password});
+      if(error){$("lErr").textContent=error.message==="Invalid login credentials"?"Wrong email or password.":error.message;$("lBtn").disabled=false;$("lBtn").textContent="Sign in";return}
+      closeSheets(); toast("Signed in. Syncing your tasks.");
+    });
+  }else{
+    const pending=tasks.filter(t=>t.dirty).length;
+    const status={ok:"Everything is synced.",busy:"Syncing now…",off:"You are offline. Changes are saved on this device and will sync later.",error:"Sync failed: "+esc(syncError)}[syncState]||"";
+    body.innerHTML=`<p>Signed in as <b>${esc(session.user.email||"")}</b>.<br>${status}<br>Last sync: ${esc(lastText)}.${pending?` Not synced yet: ${pending}.`:""}</p>
+      <div class="actions"><button class="primary" type="button" id="syncNow">Sync now</button>${installBtn}<button class="secondary" type="button" id="signOut">Sign out</button><button class="secondary" type="button" data-close>Close</button></div>`;
+    $("syncNow").addEventListener("click",()=>sync());
+    $("signOut").addEventListener("click",async()=>{await sb.auth.signOut();session=null;setSync("signin");closeSheets();toast("Signed out. Tasks stay on this device.")});
+  }
+  const ib=$("installBtn"); if(ib)ib.addEventListener("click",async()=>{installEvt.prompt();await installEvt.userChoice;installEvt=null;renderAccount()});
+}
+
+/* ---------- sheets ---------- */
+let lastFocus=null;
+function openSheet(el){lastFocus=document.activeElement;$("backdrop").classList.add("open");el.classList.add("open")}
+function closeSheets(){
+  document.querySelectorAll(".sheet.open").forEach(s=>s.classList.remove("open"));
+  $("backdrop").classList.remove("open"); editingId=null;
+  if(lastFocus&&lastFocus.focus)lastFocus.focus();
+}
+document.addEventListener("click",e=>{if(e.target.closest("[data-close]"))closeSheets()});
+$("backdrop").addEventListener("click",closeSheets);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.querySelector(".sheet.open"))closeSheets()});
+$("syncBtn").addEventListener("click",()=>{renderAccount();openSheet($("accSheet"))});
+
+/* ---------- task sheet ---------- */
+$("topics").innerHTML=TOPICS.map((t,i)=>`<input type="radio" name="topic" id="tp-${t.id}" value="${t.id}"${i===0?" checked":""}><label for="tp-${t.id}" style="--c:${color(t.id)}"><span class="dot" style="background:${color(t.id)}"></span>${esc(t.name)}</label>`).join("");
+let editingId=null, armed=false, filter="all", zoom="near", scrolledOnce=false;
+
+function openTask(id){
+  const t=id?tasks.find(x=>x.id===id&&!x.deleted):null;
+  editingId=t?t.id:null; armed=false;
+  $("sheetTitle").textContent=t?"Edit task":"New task";
+  $("saveBtn").textContent=t?"Save changes":"Add task";
+  $("fName").value=t?t.name:"";
+  const topic=t?t.topic:(filter!=="all"?filter:"study");
+  const r=document.querySelector(`#topics input[value="${topic}"]`); if(r)r.checked=true;
+  $("fStart").value=t?t.start:todayStr();
+  $("fDue").value=t?t.deadline:"";
+  $("doneBtn").hidden=!t; $("delBtn").hidden=!t;
+  if(t)$("doneBtn").textContent=t.done?"Mark not done":"Mark done";
+  $("delBtn").textContent="Delete"; $("delBtn").classList.remove("armed");
+  $("err").textContent="";
+  openSheet($("taskSheet"));
+  setTimeout(()=>$("fName").focus(),60);
+}
+$("taskSheet").addEventListener("submit",ev=>{
+  ev.preventDefault();
+  const name=$("fName").value.trim();
+  const topic=(document.querySelector("#topics input:checked")||{}).value||"personal";
+  const start=$("fStart").value||todayStr();
+  const deadline=$("fDue").value;
+  if(!name){$("err").textContent="Write what the task is.";$("fName").focus();return}
+  if(!deadline){$("err").textContent="Choose a deadline.";$("fDue").focus();return}
+  if(toNum(deadline)<toNum(start)){$("err").textContent="The deadline can't be before the start.";$("fDue").focus();return}
+  const old=editingId?tasks.find(x=>x.id===editingId):null;
+  commit({id:old?old.id:newId(),name,topic,start,deadline,done:old?!!old.done:false,deleted:false,createdAt:old?old.createdAt:Date.now()});
+  closeSheets(); toast(old?"Changes saved":"Task added");
+});
+$("doneBtn").addEventListener("click",()=>{
+  const t=tasks.find(x=>x.id===editingId); if(!t)return;
+  commit({...t,done:!t.done}); closeSheets(); toast(!t.done?"Marked done":"Marked not done");
+});
+$("delBtn").addEventListener("click",()=>{
+  if(!armed){armed=true;$("delBtn").textContent="Tap again to delete";$("delBtn").classList.add("armed");return}
+  const t=tasks.find(x=>x.id===editingId); if(!t)return;
+  commit({...t,deleted:true}); closeSheets(); toast("Task deleted");
+});
+$("fab").addEventListener("click",()=>openTask(null));
+
+/* ---------- render ---------- */
+function statusOf(t,tn){
+  if(t.done)return{text:"Done",late:false};
+  const dn=toNum(t.deadline);
+  if(dn<tn){const k=tn-dn;return{text:`Overdue by ${k} day${k>1?"s":""}`,late:true}}
+  if(dn===tn)return{text:"Due today",late:false};
+  if(dn===tn+1)return{text:"Due tomorrow",late:false};
+  return{text:`Due ${fmt(dn)}`,late:false};
+}
+function renderChips(list){
+  const used=new Set(list.map(t=>t.topic));
+  if(filter!=="all"&&!used.has(filter))filter="all";
+  const chips=[{id:"all",name:"All"},...TOPICS.filter(t=>used.has(t.id))];
+  $("chips").innerHTML=chips.map(t=>`<button type="button" class="chip" data-f="${t.id}" aria-pressed="${filter===t.id}">${t.id!=="all"?`<span class="dot" style="background:${color(t.id)}"></span>`:""}${esc(t.name)}</button>`).join("");
+}
+function render(){
+  const tn=toNum(todayStr());
+  const all=visible();
+  const active=all.filter(t=>!t.done);
+  const late=active.filter(t=>toNum(t.deadline)<tn).length;
+  const doneN=all.length-active.length;
+  $("summary").innerHTML=all.length?`${active.length} active${late?`, <b>${late} overdue</b>`:""}${doneN?`, ${doneN} done`:""}`:"No tasks yet";
+  renderChips(all);
+  const g=$("gantt");
+  if(!all.length){
+    g.innerHTML=`<div class="empty"><strong>Nothing planned yet</strong>Tap + to add your first task. Pick a topic and a deadline, and it appears here on the timeline.</div>`;
+    g._meta=null; return;
+  }
+  const shown=all.filter(t=>filter==="all"||t.topic===filter)
+    .sort((a,b)=>(a.done-b.done)||(toNum(a.deadline)-toNum(b.deadline))||(toNum(a.start)-toNum(b.start)));
+  const dayW=zoom==="near"?40:16;
+  const labelW=window.innerWidth<600?138:230;
+  let s=tn-3,e=tn+24;
+  for(const t of all){s=Math.min(s,toNum(t.start));e=Math.max(e,toNum(t.deadline)+3)}
+  s-=(fromNum(s).getUTCDay()+6)%7;
+  const N=e-s+1, trackW=N*dayW;
+  let cols="",hdays="",hmonths="";
+  for(let i=0;i<N;i++){
+    const d=fromNum(s+i),dow=d.getUTCDay(),date=d.getUTCDate();
+    cols+=`<div style="width:${dayW}px" class="${dow===0||dow===6?"we":""}${dow===1?" mon":""}"></div>`;
+    if(zoom==="near"||dow===1)hdays+=`<span class="hday${s+i===tn?" is-today":""}" style="left:${i*dayW}px;width:${zoom==="near"?dayW:dayW*2}px">${date}</span>`;
+    if(date===1||i===0)hmonths+=`<span class="hmonth" style="left:${i*dayW}px">${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}</span>`;
+  }
+  let rows="";
+  for(const t of shown){
+    const st=statusOf(t,tn),a=toNum(t.start),b=toNum(t.deadline);
+    const left=(a-s)*dayW,w=Math.max(1,b-a+1)*dayW;
+    rows+=`<div class="row${t.done?" done":""}">
+      <button type="button" class="label" style="width:${labelW}px" data-id="${esc(t.id)}">
+        <span class="name">${esc(t.name)}</span>
+        <span class="meta${st.late?" late":""}"><span class="dot" style="background:${color(t.topic)}"></span>${esc(topicById[t.topic]?topicById[t.topic].name:"Other")}, ${esc(st.text.charAt(0).toLowerCase()+st.text.slice(1))}</span>
+      </button>
+      <div class="track" style="width:${trackW}px">
+        <button type="button" class="bar${st.late?" late":""}" data-id="${esc(t.id)}" style="--c:${color(t.topic)};left:${left}px;width:${w-2}px" title="${esc(t.name)}: ${fmt(a)} to ${fmt(b)}" aria-label="${esc(t.name)}, ${fmt(a)} to ${fmt(b)}">${w>=70?esc(st.text):""}</button>
+      </div></div>`;
+  }
+  if(!shown.length)rows=`<div class="empty">No tasks with this topic.</div>`;
+  const pl=g.scrollLeft,pt=g.scrollTop;
+  g.innerHTML=`<div class="grid" style="width:${labelW+trackW}px">
+    <div class="cols" style="left:${labelW}px">${cols}</div>
+    <div class="todayline" style="left:${labelW+(tn-s)*dayW+dayW/2}px"></div>
+    <div class="row head"><div class="label" style="width:${labelW}px">${zoom==="near"?"Days":"Weeks"}</div>
+      <div class="track" style="width:${trackW}px">${hmonths}${hdays}</div></div>
+    ${rows}<div class="row filler" aria-hidden="true"><div class="label" style="width:${labelW}px"></div></div></div>`;
+  g._meta={s,dayW,tn};
+  if(!scrolledOnce){scrollToToday(false);scrolledOnce=true}else{g.scrollLeft=pl;g.scrollTop=pt}
+}
+function scrollToToday(smooth){
+  const g=$("gantt"),m=g._meta;if(!m)return;
+  g.scrollTo({left:Math.max(0,(m.tn-m.s)*m.dayW-m.dayW*2),behavior:smooth&&!matchMedia("(prefers-reduced-motion: reduce)").matches?"smooth":"auto"});
+}
+
+/* ---------- controls ---------- */
+$("gantt").addEventListener("click",e=>{const b=e.target.closest("[data-id]");if(b)openTask(b.dataset.id)});
+$("chips").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(!b)return;filter=b.dataset.f;render()});
+document.querySelectorAll("[data-zoom]").forEach(b=>b.addEventListener("click",()=>{
+  zoom=b.dataset.zoom;document.querySelectorAll("[data-zoom]").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  scrolledOnce=false;render();
+}));
+$("todayBtn").addEventListener("click",()=>scrollToToday(true));
+let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(render,150)});
+let lastDay=todayStr();setInterval(()=>{if(todayStr()!==lastDay){lastDay=todayStr();render()}},60000);
+
+/* ---------- start ---------- */
+render(); paintSync(); initAuth();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+})();
+</script>
+</body>
+</html>
